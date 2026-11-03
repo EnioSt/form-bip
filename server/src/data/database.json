@@ -1,0 +1,103 @@
+{
+  "users": [
+    {
+      "id": "usr-admin-1",
+      "name": "Suporte BIP360",
+      "email": "suporte@bip360.com.br",
+      "password": "123",
+      "role": "admin"
+    },
+    {
+      "id": "usr-op-1",
+      "name": "Enio dos Santos Junior",
+      "email": "enio.junior@bip360.com.br",
+      "password": "123",
+      "role": "operator"
+    }
+  ],
+  "cards": [
+    {
+      "id": "card-1",
+      "title": "São José do Rio Preto 05",
+      "status": "triagem",
+      "unique_token": "token-sjrp-05",
+      "is_form_open": true,
+      "operator_id": "usr-op-1",
+      "created_at": "2026-11-03T10:00:00.000Z"
+    },
+    {
+      "id": "card-2",
+      "title": "Campinas Centro 12",
+      "status": "preenchido",
+      "unique_token": "token-campinas-12",
+      "is_form_open": false,
+      "operator_id": null,
+      "created_at": "2026-11-02T14:30:00.000Z"
+    },
+    {
+      "id": "card-3",
+      "title": "Ribeirão Preto Sul 03",
+      "status": "concluido",
+      "unique_token": "token-rib-03",
+      "is_form_open": false,
+      "operator_id": "usr-op-1",
+      "created_at": "2026-11-01T09:15:00.000Z"
+    },
+    {
+      "id": "card-1793732082948",
+      "title": "José Bonifácio 01",
+      "status": "preenchido",
+      "unique_token": "token-1793732082948-pthla",
+      "is_form_open": false,
+      "operator_id": null,
+      "created_at": "2026-11-03T18:54:42.948Z"
+    }
+  ],
+  "formData": [
+    {
+      "id": "form-data-2",
+      "card_id": "card-2",
+      "cnpj": "12.345.678/0001-90",
+      "razao_social": "Exemplo Comércio de Alimentos Ltda",
+      "responsavel": "Maria Souza",
+      "telefone": "(17) 99999-0000",
+      "email_unidade": "loja1@chiquinho.com.br",
+      "endereco": "Rua das Flores, 123 - Centro",
+      "cep": "15000-000",
+      "cidade": "São José do Rio Preto",
+      "uf": "SP",
+      "numero_logico_adquirente": "98765432",
+      "qtd_pdvs_tef": "1",
+      "qtd_totems_tef": "0",
+      "foto_maquininha_ok": true,
+      "photo_url": "https://storage.mock-bip360.local/uploads/mock-maquininha.jpg",
+      "pix_psp_banco": "Banco Itaú",
+      "pix_vinculacao_fiserv_ok": true,
+      "pix_chave": "12.345.678/0001-90",
+      "pix_nao_se_aplica": false
+    },
+    {
+      "id": "form-data-1793732214329",
+      "card_id": "card-1793732082948",
+      "cnpj": "46.762.181/0001-94",
+      "razao_social": "RDL COMERCIO DE ALIMENTOS LTDA",
+      "responsavel": "Carlos Roberto de Araujo Filho",
+      "telefone": "17999999999",
+      "email_unidade": "josebonifacio@chiquinho.com.br",
+      "endereco": "AVENIDA 9 DE JULHO, 888",
+      "cep": "15200000",
+      "cidade": "José Bonifácio",
+      "uf": "SP",
+      "numero_logico_adquirente": "1234567899",
+      "qtd_pdvs_tef": "1",
+      "qtd_totems_tef": "0",
+      "foto_maquininha_ok": true,
+      "photo_url": "https://storage.mock-bip360.local/uploads/1793732205550-RG.jpeg",
+      "pix_psp_banco": "",
+      "pix_vinculacao_fiserv_ok": false,
+      "pix_chave": "",
+      "pix_nao_se_aplica": true,
+      "created_at": "2026-11-03T18:56:54.329Z"
+    }
+  ]
+}

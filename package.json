@@ -1,0 +1,13 @@
+{
+  "name": "form-bip",
+  "version": "1.0.0",
+  "description": "Sistema BIP360 com Kanban e Form SiTEF",
+  "scripts": {
+    "server": "cd server && node src/server.js",
+    "client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
