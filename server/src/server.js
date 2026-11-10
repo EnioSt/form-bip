@@ -176,7 +176,7 @@ app.post('/api/cards', (req, res) => {
 
 app.put('/api/cards/:id/status', (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, scheduled_date } = req.body;
   const validStatuses = ['triagem', 'preenchido', 'implantacao', 'concluido'];
 
   if (!validStatuses.includes(status)) {
@@ -190,6 +190,10 @@ app.put('/api/cards/:id/status', (req, res) => {
   }
 
   card.status = status;
+  if (scheduled_date !== undefined) {
+    card.scheduled_date = scheduled_date;
+  }
+
   writeDatabase(db);
   res.json(card);
 });
@@ -210,6 +214,22 @@ app.put('/api/cards/:id/assume', (req, res) => {
   res.json(card);
 });
 
+// Alterar apenas a data prevista de implantação
+app.put('/api/cards/:id/schedule', (req, res) => {
+  const { id } = req.params;
+  const { scheduled_date } = req.body;
+
+  const db = readDatabase();
+  const card = db.cards.find(c => c.id === id);
+  if (!card) {
+    return res.status(404).json({ error: 'Card não encontrado' });
+  }
+
+  card.scheduled_date = scheduled_date || null;
+  writeDatabase(db);
+  res.json(card);
+});
+
 // Reabrir formulário do card
 app.put('/api/cards/:id/reopen', (req, res) => {
   const { id } = req.params;
@@ -223,6 +243,80 @@ app.put('/api/cards/:id/reopen', (req, res) => {
   card.is_form_open = true;
   writeDatabase(db);
   res.json(card);
+});
+
+// Adicionar observação interna no card (qualquer usuário autenticado)
+app.post('/api/cards/:id/notes', (req, res) => {
+  const { id } = req.params;
+  const { text, author_id, author_name } = req.body;
+
+  if (!text || !text.trim()) {
+    return res.status(400).json({ error: 'O texto da observação não pode estar vazio.' });
+  }
+
+  const cleanText = text.trim();
+  if (cleanText.length > 150) {
+    return res.status(400).json({ error: 'A observação deve ter no máximo 150 caracteres.' });
+  }
+
+  const db = readDatabase();
+  const card = db.cards.find(c => c.id === id);
+  if (!card) {
+    return res.status(404).json({ error: 'Card não encontrado.' });
+  }
+
+  if (!Array.isArray(card.notes)) {
+    card.notes = [];
+  }
+
+  const newNote = {
+    id: `note-${Date.now()}`,
+    text: cleanText,
+    author_id: author_id || null,
+    author_name: author_name || 'Operador',
+    created_at: new Date().toISOString()
+  };
+
+  card.notes.push(newNote);
+  writeDatabase(db);
+
+  res.status(201).json({ note: newNote, card });
+});
+
+// Excluir observação interna (Autor ou Administrador)
+app.delete('/api/cards/:cardId/notes/:noteId', (req, res) => {
+  const { cardId, noteId } = req.params;
+  const { user_id, user_role } = req.body;
+
+  const db = readDatabase();
+  const card = db.cards.find(c => c.id === cardId);
+  if (!card) {
+    return res.status(404).json({ error: 'Card não encontrado.' });
+  }
+
+  if (!Array.isArray(card.notes)) {
+    return res.status(404).json({ error: 'Nenhuma observação encontrada.' });
+  }
+
+  const noteIndex = card.notes.findIndex(n => n.id === noteId);
+  if (noteIndex === -1) {
+    return res.status(404).json({ error: 'Observação não encontrada.' });
+  }
+
+  const targetNote = card.notes[noteIndex];
+
+  // Permissão: Apenas o próprio autor ou Admin podem excluir
+  const isAuthor = targetNote.author_id && targetNote.author_id === user_id;
+  const isAdmin = user_role === 'admin';
+
+  if (!isAuthor && !isAdmin) {
+    return res.status(403).json({ error: 'Você só pode excluir suas próprias observações.' });
+  }
+
+  card.notes.splice(noteIndex, 1);
+  writeDatabase(db);
+
+  res.json({ message: 'Observação excluída com sucesso.', card });
 });
 
 // 4. Formulário Público e Upload Mock

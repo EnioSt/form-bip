@@ -54,6 +54,14 @@ ${f.pix_nao_se_aplica ? `* **Status Pix:** NÃO SE APLICA (N/A) - Loja não oper
 `}
 
 ---
+
+### 4. OBSERVAÇÕES INTERNAS
+${Array.isArray(card.notes) && card.notes.length > 0 ? card.notes.map(n => {
+  const d = new Date(n.created_at).toLocaleString('pt-BR');
+  return `* **[${d}] ${n.author_name}:** ${n.text}`;
+}).join('\n') : '*Nenhuma observação interna adicionada.*'}
+
+---
 *Gerado automaticamente pelo Sistema BIP360 Onboarding.*
 `;
 }

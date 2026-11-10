@@ -12,27 +12,29 @@
       "name": "Enio dos Santos Junior",
       "email": "enio.junior@bip360.com.br",
       "password": "123",
-      "role": "operator"
+      "role": "admin"
     }
   ],
   "cards": [
     {
       "id": "card-1",
       "title": "São José do Rio Preto 05",
-      "status": "triagem",
+      "status": "concluido",
       "unique_token": "token-sjrp-05",
-      "is_form_open": true,
+      "is_form_open": false,
       "operator_id": "usr-op-1",
-      "created_at": "2026-11-03T10:00:00.000Z"
+      "created_at": "2026-11-03T10:00:00.000Z",
+      "scheduled_date": null
     },
     {
       "id": "card-2",
       "title": "Campinas Centro 12",
-      "status": "preenchido",
+      "status": "concluido",
       "unique_token": "token-campinas-12",
       "is_form_open": false,
-      "operator_id": null,
-      "created_at": "2026-11-02T14:30:00.000Z"
+      "operator_id": "usr-admin-1",
+      "created_at": "2026-11-02T14:30:00.000Z",
+      "scheduled_date": null
     },
     {
       "id": "card-3",
@@ -41,16 +43,78 @@
       "unique_token": "token-rib-03",
       "is_form_open": false,
       "operator_id": "usr-op-1",
-      "created_at": "2026-11-01T09:15:00.000Z"
+      "created_at": "2026-11-01T09:15:00.000Z",
+      "scheduled_date": "2026-11-04"
     },
     {
       "id": "card-1793732082948",
       "title": "José Bonifácio 01",
-      "status": "preenchido",
+      "status": "implantacao",
       "unique_token": "token-1793732082948-pthla",
       "is_form_open": false,
-      "operator_id": null,
-      "created_at": "2026-11-03T18:54:42.948Z"
+      "operator_id": "usr-admin-1",
+      "created_at": "2026-11-03T18:54:42.948Z",
+      "scheduled_date": "2026-11-10",
+      "notes": []
+    },
+    {
+      "id": "card-1793792499634",
+      "title": "Catanduva 02",
+      "status": "implantacao",
+      "unique_token": "token-1793792499634-3e6tq",
+      "is_form_open": false,
+      "operator_id": "usr-op-1",
+      "created_at": "2026-11-04T11:41:39.634Z",
+      "scheduled_date": "2026-11-20",
+      "notes": [
+        {
+          "id": "note-1793792573040",
+          "text": "chamado 255482",
+          "author_id": "usr-op-1",
+          "author_name": "Enio dos Santos Junior",
+          "created_at": "2026-11-04T11:42:53.040Z"
+        }
+      ]
+    },
+    {
+      "id": "card-1793806824686",
+      "title": "Curitiba 01",
+      "status": "implantacao",
+      "unique_token": "token-1793806824687-r8zno",
+      "is_form_open": false,
+      "operator_id": "usr-op-1",
+      "created_at": "2026-11-04T15:40:24.689Z",
+      "scheduled_date": "2026-11-25"
+    },
+    {
+      "id": "card-sim-marilia",
+      "title": "Marília Centro 04",
+      "status": "implantacao",
+      "unique_token": "token-marilia-04",
+      "is_form_open": false,
+      "operator_id": "usr-op-1",
+      "created_at": "2026-11-05T09:00:00.000Z",
+      "scheduled_date": "2026-11-12"
+    },
+    {
+      "id": "card-sim-araraquara",
+      "title": "Araraquara Shopping 02",
+      "status": "implantacao",
+      "unique_token": "token-araraquara-02",
+      "is_form_open": false,
+      "operator_id": "usr-admin-1",
+      "created_at": "2026-11-05T14:20:00.000Z",
+      "scheduled_date": "2026-11-16"
+    },
+    {
+      "id": "card-sim-sorocaba",
+      "title": "Sorocaba Norte 01",
+      "status": "implantacao",
+      "unique_token": "token-sorocaba-01",
+      "is_form_open": false,
+      "operator_id": "usr-op-1",
+      "created_at": "2026-11-06T08:30:00.000Z",
+      "scheduled_date": "2026-11-27"
     }
   ],
   "formData": [

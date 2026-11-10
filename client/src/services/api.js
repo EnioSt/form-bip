@@ -74,11 +74,11 @@ export const api = {
     return res.json();
   },
 
-  updateCardStatus: async (id, status) => {
+  updateCardStatus: async (id, status, scheduled_date) => {
     const res = await fetch(`${API_URL}/cards/${id}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, scheduled_date })
     });
     if (!res.ok) throw new Error('Falha ao atualizar status');
     return res.json();
@@ -94,11 +94,47 @@ export const api = {
     return res.json();
   },
 
+  updateCardSchedule: async (id, scheduled_date) => {
+    const res = await fetch(`${API_URL}/cards/${id}/schedule`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scheduled_date })
+    });
+    if (!res.ok) throw new Error('Falha ao atualizar data prevista');
+    return res.json();
+  },
+
   reopenCard: async (id) => {
     const res = await fetch(`${API_URL}/cards/${id}/reopen`, {
       method: 'PUT'
     });
     if (!res.ok) throw new Error('Falha ao reabrir formulário');
+    return res.json();
+  },
+
+  addCardNote: async (cardId, text, author_id, author_name) => {
+    const res = await fetch(`${API_URL}/cards/${cardId}/notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, author_id, author_name })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Falha ao salvar observação');
+    }
+    return res.json();
+  },
+
+  deleteCardNote: async (cardId, noteId, user_id, user_role) => {
+    const res = await fetch(`${API_URL}/cards/${cardId}/notes/${noteId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id, user_role })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Falha ao excluir observação');
+    }
     return res.json();
   },
 
