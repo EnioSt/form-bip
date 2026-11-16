@@ -14,9 +14,11 @@ export default function KanbanColumn({
   onOpenCard,
   onCopyLink,
   onAssume,
+  onAssignOperator,
   onStartImplantation,
   onMoveStatus,
-  onReopen
+  onReopen,
+  onDeleteCard
 }) {
   const [isOver, setIsOver] = useState(false);
   const columnCards = cards.filter(c => c.status === column.id);
@@ -81,6 +83,7 @@ export default function KanbanColumn({
             key={card.id}
             card={card}
             user={user}
+            users={users}
             operatorName={getOperatorName(card.operator_id)}
             copiedToken={copiedToken}
             isDragging={draggedCard?.id === card.id}
@@ -89,9 +92,11 @@ export default function KanbanColumn({
             onOpenCard={onOpenCard}
             onCopyLink={onCopyLink}
             onAssume={onAssume}
+            onAssignOperator={onAssignOperator}
             onStartImplantation={onStartImplantation}
             onMoveStatus={onMoveStatus}
             onReopen={onReopen}
+            onDeleteCard={onDeleteCard}
           />
         ))}
 

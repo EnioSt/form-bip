@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { api } from '../services/api';
 import logoBip360 from '../assets/images/logo-bip360.png';
+import AcquirerSelect from '../components/common/AcquirerSelect';
 import { 
   Building2, 
   CreditCard, 
@@ -27,6 +28,16 @@ export default function PublicForm() {
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
+  const [acquirerOptions, setAcquirerOptions] = useState([
+    'Bin',
+    'Cielo',
+    'Getnet',
+    'PagSeguro (PagBank)',
+    'Rede',
+    'Sicredi',
+    'Sipag (Sicoob)',
+    'Stone'
+  ]);
 
   const {
     register,
@@ -46,6 +57,8 @@ export default function PublicForm() {
       cep: '',
       cidade: '',
       uf: '',
+      adquirente_banco: '',
+      adquirente_outro_nome: '',
       numero_logico_adquirente: '',
       qtd_pdvs_tef: '1',
       qtd_totems_tef: '0',
@@ -63,10 +76,39 @@ export default function PublicForm() {
   useEffect(() => {
     async function loadForm() {
       try {
-        const data = await api.getFormByToken(token);
+        const [formDataRes, acquirersRes] = await Promise.all([
+          api.getFormByToken(token),
+          api.getAcquirers().catch(() => [
+            'Bin',
+            'Cielo',
+            'Getnet',
+            'PagSeguro (PagBank)',
+            'Rede',
+            'Sicredi',
+            'Sipag (Sicoob)',
+            'Stone'
+          ])
+        ]);
+
+        if (Array.isArray(acquirersRes) && acquirersRes.length > 0) {
+          setAcquirerOptions(acquirersRes);
+        }
+
+        const data = formDataRes;
         setCard(data.card);
 
         if (data.formData) {
+          const rawAdquirente = data.formData.adquirente_banco || '';
+          const knownOptions = Array.isArray(acquirersRes) ? acquirersRes : acquirerOptions;
+          const isKnown = knownOptions.includes(rawAdquirente);
+          let selectVal = rawAdquirente;
+          let outroVal = data.formData.adquirente_outro_nome || '';
+
+          if (rawAdquirente && !isKnown) {
+            selectVal = 'Outro';
+            outroVal = rawAdquirente;
+          }
+
           reset({
             cnpj: data.formData.cnpj || '',
             razao_social: data.formData.razao_social || '',
@@ -77,6 +119,8 @@ export default function PublicForm() {
             cep: data.formData.cep || '',
             cidade: data.formData.cidade || '',
             uf: data.formData.uf || '',
+            adquirente_banco: selectVal,
+            adquirente_outro_nome: outroVal,
             numero_logico_adquirente: data.formData.numero_logico_adquirente || '',
             qtd_pdvs_tef: data.formData.qtd_pdvs_tef || data.formData.sitef_quantidade_terminais || '1',
             qtd_totems_tef: data.formData.qtd_totems_tef || '0',
@@ -117,20 +161,25 @@ export default function PublicForm() {
       { id: 9, name: 'UF', ok: isFilled(formValues.uf) }
     ];
 
-    // Seção 2: Dados do Adquirente (4 campos)
+    // Seção 2: Dados do Adquirente (5 campos)
+    const adqOk = formValues.adquirente_banco === 'Outro' 
+      ? isFilled(formValues.adquirente_outro_nome) 
+      : isFilled(formValues.adquirente_banco);
+
     const s2 = [
-      { id: 10, name: 'Número Lógico da Adquirente', ok: isFilled(formValues.numero_logico_adquirente) },
-      { id: 11, name: 'Quantidade de PDVs com TEF', ok: isFilled(formValues.qtd_pdvs_tef) },
-      { id: 12, name: 'Quantidade de TOTEMs com TEF', ok: isFilled(formValues.qtd_totems_tef) },
-      { id: 13, name: 'Foto da maquininha', ok: !!formValues.foto_maquininha_ok || isFilled(formValues.photo_url) }
+      { id: 10, name: 'Adquirente TEF', ok: adqOk },
+      { id: 11, name: 'Número Lógico da Adquirente', ok: isFilled(formValues.numero_logico_adquirente) },
+      { id: 12, name: 'Quantidade de PDVs com TEF', ok: isFilled(formValues.qtd_pdvs_tef) },
+      { id: 13, name: 'Quantidade de TOTEMs com TEF', ok: isFilled(formValues.qtd_totems_tef) },
+      { id: 14, name: 'Foto da maquininha', ok: !!formValues.foto_maquininha_ok || isFilled(formValues.photo_url) }
     ];
 
     // Seção 3: Credenciamento Pix (3 campos ou N/A)
     const pixNA = !!formValues.pix_nao_se_aplica;
     const s3 = [
-      { id: 14, name: 'Identificação do PSP (Banco)', ok: pixNA || isFilled(formValues.pix_psp_banco), na: pixNA },
-      { id: 15, name: 'Vinculação com integração FISERV no Banco', ok: pixNA || !!formValues.pix_vinculacao_fiserv_ok, na: pixNA },
-      { id: 16, name: 'Chave Pix que será utilizada', ok: pixNA || isFilled(formValues.pix_chave), na: pixNA }
+      { id: 15, name: 'Identificação do PSP (Banco)', ok: pixNA || isFilled(formValues.pix_psp_banco), na: pixNA },
+      { id: 16, name: 'Vinculação com integração FISERV no Banco', ok: pixNA || !!formValues.pix_vinculacao_fiserv_ok, na: pixNA },
+      { id: 17, name: 'Chave Pix que será utilizada', ok: pixNA || isFilled(formValues.pix_chave), na: pixNA }
     ];
 
     const allItems = [...s1, ...s2, ...(pixNA ? [] : s3)];
@@ -177,7 +226,16 @@ export default function PublicForm() {
 
   const onSubmit = async (values) => {
     try {
-      await api.submitForm(token, values);
+      const finalAdquirente = values.adquirente_banco === 'Outro'
+        ? values.adquirente_outro_nome
+        : values.adquirente_banco;
+
+      const payload = {
+        ...values,
+        adquirente_banco: finalAdquirente
+      };
+
+      await api.submitForm(token, payload);
       setSubmitted(true);
     } catch (err) {
       alert(err.message || 'Erro ao enviar dados do formulário');
@@ -525,18 +583,46 @@ export default function PublicForm() {
                 </h2>
               </div>
               <p className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-1 flex items-center gap-1">
-                <Info size={14} /> ⓘ Solicitar ao adquirente (exemplo: REDE)
+                <Info size={14} /> ⓘ Solicitar ao adquirente contratado para transacionar no SiTEF
               </p>
             </div>
 
             <div className="space-y-4">
-              {/* Campo 10: Número Lógico */}
+              {/* Campo 10: Seleção da Adquirente com Busca e Opção Outro */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-darkSurface-bg border border-slate-200 dark:border-darkSurface-border">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <label className="text-xs font-bold text-slate-800 dark:text-white">
+                    #10. Adquirente / Empresa TEF *
+                  </label>
+                  {renderStatusBadge(progressData.s2Status[10])}
+                </div>
+                <AcquirerSelect
+                  options={acquirerOptions}
+                  value={formValues.adquirente_banco}
+                  customValue={formValues.adquirente_outro_nome}
+                  required
+                  onChangeSelect={(val) => {
+                    setValue('adquirente_banco', val, { shouldValidate: true });
+                    if (val !== 'Outro') {
+                      setValue('adquirente_outro_nome', '');
+                    }
+                  }}
+                  onChangeCustomValue={(val) => {
+                    setValue('adquirente_outro_nome', val, { shouldValidate: true });
+                  }}
+                />
+                <span className="text-[11px] text-slate-400 block mt-1">
+                  Selecione sua empresa de maquininha/TEF. Se não encontrar na lista, escolha "Outro" e digite o nome.
+                </span>
+              </div>
+
+              {/* Campo 11: Número Lógico */}
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-darkSurface-bg border border-slate-200 dark:border-darkSurface-border">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <label className="text-xs font-bold text-slate-800 dark:text-white">
-                    #10. Número Lógico da Adquirente *
+                    #11. Número Lógico da Adquirente *
                   </label>
-                  {renderStatusBadge(progressData.s2Status[10])}
+                  {renderStatusBadge(progressData.s2Status[11])}
                 </div>
                 <input
                   type="text"
@@ -548,14 +634,14 @@ export default function PublicForm() {
                 <span className="text-[11px] text-slate-400 block mt-1">Exemplo / orientação: Informado pela adquirente</span>
               </div>
 
-              {/* Grid 11 e 12: PDVs e TOTEMs */}
+              {/* Grid 12 e 13: PDVs e TOTEMs */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-darkSurface-bg border border-slate-200 dark:border-darkSurface-border">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <label className="text-xs font-bold text-slate-800 dark:text-white">
-                      #11. Quantidade de PDVs com TEF (terminais) *
+                      #12. Quantidade de PDVs com TEF (terminais) *
                     </label>
-                    {renderStatusBadge(progressData.s2Status[11])}
+                    {renderStatusBadge(progressData.s2Status[12])}
                   </div>
                   <input
                     type="number"
@@ -571,9 +657,9 @@ export default function PublicForm() {
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-darkSurface-bg border border-slate-200 dark:border-darkSurface-border">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <label className="text-xs font-bold text-slate-800 dark:text-white">
-                      #12. Quantidade de TOTEMs com TEF (terminais) *
+                      #13. Quantidade de TOTEMs com TEF (terminais) *
                     </label>
-                    {renderStatusBadge(progressData.s2Status[12])}
+                    {renderStatusBadge(progressData.s2Status[13])}
                   </div>
                   <input
                     type="number"
@@ -587,13 +673,13 @@ export default function PublicForm() {
                 </div>
               </div>
 
-              {/* Campo 13: Foto da Maquininha */}
+              {/* Campo 14: Foto da Maquininha */}
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-darkSurface-bg border border-slate-200 dark:border-darkSurface-border">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <label className="text-xs font-bold text-slate-800 dark:text-white">
-                    #13. Foto da maquininha para registro no chamado *
+                    #14. Foto da maquininha para registro no chamado *
                   </label>
-                  {renderStatusBadge(progressData.s2Status[13])}
+                  {renderStatusBadge(progressData.s2Status[14])}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-darkSurface-muted mb-3">
                   Exemplo / orientação: Enviar a foto no chamado e marcar como OK
@@ -672,13 +758,13 @@ export default function PublicForm() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Campo 14: Identificação do PSP (Banco) */}
+                {/* Campo 15: Identificação do PSP (Banco) */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-darkSurface-bg border border-slate-200 dark:border-darkSurface-border">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <label className="text-xs font-bold text-slate-800 dark:text-white">
-                      #14. Identificação do PSP (Banco) *
+                      #15. Identificação do PSP (Banco) *
                     </label>
-                    {renderStatusBadge(progressData.s3Status[14])}
+                    {renderStatusBadge(progressData.s3Status[15])}
                   </div>
                   <input
                     type="text"
@@ -689,13 +775,13 @@ export default function PublicForm() {
                   <span className="text-[11px] text-slate-400 block mt-1">Exemplo / orientação: Banco do cliente onde está a chave Pix</span>
                 </div>
 
-                {/* Campo 15: Vinculação com FISERV */}
+                {/* Campo 16: Vinculação com FISERV */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-darkSurface-bg border border-slate-200 dark:border-darkSurface-border">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <label className="text-xs font-bold text-slate-800 dark:text-white">
-                      #15. Vinculação com a integração FISERV no Banco *
+                      #16. Vinculação com a integração FISERV no Banco *
                     </label>
-                    {renderStatusBadge(progressData.s3Status[15])}
+                    {renderStatusBadge(progressData.s3Status[16])}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-darkSurface-muted mb-2">
                     Exemplo / orientação: Realizar no banco e marcar como OK quando concluído
@@ -710,13 +796,13 @@ export default function PublicForm() {
                   </label>
                 </div>
 
-                {/* Campo 16: Chave Pix */}
+                {/* Campo 17: Chave Pix */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-darkSurface-bg border border-slate-200 dark:border-darkSurface-border">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <label className="text-xs font-bold text-slate-800 dark:text-white">
-                      #16. Chave Pix que será utilizada na operação *
+                      #17. Chave Pix que será utilizada na operação *
                     </label>
-                    {renderStatusBadge(progressData.s3Status[16])}
+                    {renderStatusBadge(progressData.s3Status[17])}
                   </div>
                   <input
                     type="text"

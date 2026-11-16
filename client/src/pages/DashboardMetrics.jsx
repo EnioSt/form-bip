@@ -1,12 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { api } from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import { BarChart3, CalendarDays, Maximize2, Minimize2, Tv } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from "react";
+import { api } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import {
+  BarChart3,
+  CalendarDays,
+  Maximize2,
+  Minimize2,
+  Tv,
+  MonitorActivity,
+} from "lucide-react";
+import logoBip360 from "../assets/images/logo-bip360.png";
+import logoChiquinho from "../assets/images/logo-chiquinho.png";
 
-import DashboardFilterBar from '../components/metrics/DashboardFilterBar';
-import MetricsSummaryCards from '../components/metrics/MetricsSummaryCards';
-import CalendarWidget from '../components/metrics/CalendarWidget';
-import OperatorStatsTable from '../components/metrics/OperatorStatsTable';
+import DashboardFilterBar from "../components/metrics/DashboardFilterBar";
+import MetricsSummaryCards from "../components/metrics/MetricsSummaryCards";
+import CalendarWidget from "../components/metrics/CalendarWidget";
+import OperatorStatsTable from "../components/metrics/OperatorStatsTable";
 
 export default function DashboardMetrics() {
   const { user } = useAuth();
@@ -16,11 +25,15 @@ export default function DashboardMetrics() {
 
   // Filtros: Usuário / Operador e Período (padrão: Mês atual)
   const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .split("T")[0];
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    .toISOString()
+    .split("T")[0];
 
-  const [selectedOperator, setSelectedOperator] = useState('all');
-  const [selectedStore, setSelectedStore] = useState('all');
+  const [selectedOperator, setSelectedOperator] = useState("all");
+  const [selectedStore, setSelectedStore] = useState("all");
   const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(lastDayOfMonth);
   const [isFiltering, setIsFiltering] = useState(false);
@@ -29,20 +42,23 @@ export default function DashboardMetrics() {
   const [calendarDate, setCalendarDate] = useState(new Date());
 
   // Estado de Tela Cheia (F11 ou botão TV)
-  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+  const [isFullscreen, setIsFullscreen] = useState(
+    !!document.fullscreenElement,
+  );
 
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.error('Erro ao ativar tela cheia:', err);
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error("Erro ao ativar tela cheia:", err);
       });
     } else {
       if (document.exitFullscreen) {
@@ -52,11 +68,15 @@ export default function DashboardMetrics() {
   };
 
   const handlePrevMonth = () => {
-    setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCalendarDate(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
+    );
   };
 
   const handleNextMonth = () => {
-    setCalendarDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCalendarDate(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
+    );
   };
 
   useEffect(() => {
@@ -64,7 +84,7 @@ export default function DashboardMetrics() {
       try {
         const [cardsRes, usersRes] = await Promise.all([
           api.getCards(),
-          api.getUsers()
+          api.getUsers(),
         ]);
         setCards(cardsRes);
         setUsers(usersRes);
@@ -105,8 +125,8 @@ export default function DashboardMetrics() {
   };
 
   const resetFilters = () => {
-    setSelectedOperator('all');
-    setSelectedStore('all');
+    setSelectedOperator("all");
+    setSelectedStore("all");
     setStartDate(firstDayOfMonth);
     setEndDate(lastDayOfMonth);
     triggerFilterFeedback();
@@ -114,18 +134,18 @@ export default function DashboardMetrics() {
 
   // Filtragem dos cards (Em modo Fullscreen/TV: exibe todos os cards sem filtro de data)
   const filteredCards = useMemo(() => {
-    return cards.filter(card => {
+    return cards.filter((card) => {
       // No modo TV, desconsidera filtros para exibir a visão geral acumulada
       if (isFullscreen) return true;
 
       // 1. Filtro por Loja / Unidade
-      if (selectedStore !== 'all' && card.id !== selectedStore) {
+      if (selectedStore !== "all" && card.id !== selectedStore) {
         return false;
       }
 
       // 2. Filtro por Operador
-      if (selectedOperator !== 'all') {
-        if (selectedOperator === 'unassigned') {
+      if (selectedOperator !== "all") {
+        if (selectedOperator === "unassigned") {
           if (card.operator_id) return false;
         } else if (card.operator_id !== selectedOperator) {
           return false;
@@ -134,41 +154,67 @@ export default function DashboardMetrics() {
 
       // 3. Filtro por Data de criação
       if (card.created_at) {
-        const cardDate = card.created_at.split('T')[0];
+        const cardDate = card.created_at.split("T")[0];
         if (startDate && cardDate < startDate) return false;
         if (endDate && cardDate > endDate) return false;
       }
 
       return true;
     });
-  }, [cards, isFullscreen, selectedStore, selectedOperator, startDate, endDate]);
+  }, [
+    cards,
+    isFullscreen,
+    selectedStore,
+    selectedOperator,
+    startDate,
+    endDate,
+  ]);
 
   // Cálculos de Métricas
   const metrics = useMemo(() => {
     const total = filteredCards.length;
-    const triagem = filteredCards.filter(c => c.status === 'triagem').length;
-    const preenchido = filteredCards.filter(c => c.status === 'preenchido').length;
-    const implantacao = filteredCards.filter(c => c.status === 'implantacao').length;
-    const concluido = filteredCards.filter(c => c.status === 'concluido').length;
+    const triagem = filteredCards.filter((c) => c.status === "triagem").length;
+    const preenchido = filteredCards.filter(
+      (c) => c.status === "preenchido",
+    ).length;
+    const implantacao = filteredCards.filter(
+      (c) => c.status === "implantacao",
+    ).length;
+    const concluido = filteredCards.filter(
+      (c) => c.status === "concluido",
+    ).length;
 
-    // Total acumulado desde sempre (all time)
+    // Total acumulado desde sempre (all time) - considera apenas lojas ativas no sistema
     let allTimePdvs = 0;
     let allTimeTotems = 0;
-    cards.forEach(c => {
-      if (c.formData) {
-        const pdvs = parseInt(c.formData.qtd_pdvs_tef, 10);
-        if (!isNaN(pdvs) && pdvs > 0) allTimePdvs += pdvs;
+    let allTimeConcluidos = 0;
+    let allTimeLojasAtivas = 0;
+    cards.forEach((c) => {
+      const isActive = c.is_active !== false;
 
-        const totems = parseInt(c.formData.qtd_totems_tef, 10);
-        if (!isNaN(totems) && totems > 0) allTimeTotems += totems;
+      if (isActive) {
+        allTimeLojasAtivas += 1;
+
+        if (c.status === "concluido") {
+          allTimeConcluidos += 1;
+        }
+
+        if (c.formData) {
+          const pdvs = parseInt(c.formData.qtd_pdvs_tef, 10);
+          if (!isNaN(pdvs) && pdvs > 0) allTimePdvs += pdvs;
+
+          const totems = parseInt(c.formData.qtd_totems_tef, 10);
+          if (!isNaN(totems) && totems > 0) allTimeTotems += totems;
+        }
       }
     });
 
-    // Totalização de PDVs e TOTEMs no período filtrado (ou all time se modo TV)
+    // Totalização de PDVs e TOTEMs no período filtrado (ou all time se modo TV) - apenas lojas ativas
     let totalPdvs = 0;
     let totalTotems = 0;
-    filteredCards.forEach(c => {
-      if (c.formData) {
+    filteredCards.forEach((c) => {
+      const isActive = c.is_active !== false;
+      if (isActive && c.formData) {
         const pdvs = parseInt(c.formData.qtd_pdvs_tef, 10);
         if (!isNaN(pdvs) && pdvs > 0) totalPdvs += pdvs;
 
@@ -178,16 +224,21 @@ export default function DashboardMetrics() {
     });
 
     const taxaConclusao = total > 0 ? Math.round((concluido / total) * 100) : 0;
-    const cardsComFoto = filteredCards.filter(c => c.formData?.photo_url).length;
-    const cardsComPix = filteredCards.filter(c => c.formData && !c.formData.pix_nao_se_aplica && c.formData.pix_chave).length;
+    const cardsComFoto = filteredCards.filter(
+      (c) => c.formData?.photo_url,
+    ).length;
+    const cardsComPix = filteredCards.filter(
+      (c) =>
+        c.formData && !c.formData.pix_nao_se_aplica && c.formData.pix_chave,
+    ).length;
 
     // Desempenho por Operador
-    const operatorStats = users.map(u => {
-      const userCards = cards.filter(c => {
-        if (selectedStore !== 'all' && c.id !== selectedStore) return false;
+    const operatorStats = users.map((u) => {
+      const userCards = cards.filter((c) => {
+        if (selectedStore !== "all" && c.id !== selectedStore) return false;
         if (c.operator_id !== u.id) return false;
         if (c.created_at) {
-          const cardDate = c.created_at.split('T')[0];
+          const cardDate = c.created_at.split("T")[0];
           if (startDate && cardDate < startDate) return false;
           if (endDate && cardDate > endDate) return false;
         }
@@ -195,9 +246,15 @@ export default function DashboardMetrics() {
       });
 
       const totalVinculados = userCards.length;
-      const emImplantacao = userCards.filter(c => c.status === 'implantacao').length;
-      const concluidos = userCards.filter(c => c.status === 'concluido').length;
-      const preenchidos = userCards.filter(c => c.status === 'preenchido').length;
+      const emImplantacao = userCards.filter(
+        (c) => c.status === "implantacao",
+      ).length;
+      const concluidos = userCards.filter(
+        (c) => c.status === "concluido",
+      ).length;
+      const preenchidos = userCards.filter(
+        (c) => c.status === "preenchido",
+      ).length;
 
       return {
         ...u,
@@ -205,7 +262,10 @@ export default function DashboardMetrics() {
         emImplantacao,
         concluidos,
         preenchidos,
-        taxaConclusao: totalVinculados > 0 ? Math.round((concluidos / totalVinculados) * 100) : 0
+        taxaConclusao:
+          totalVinculados > 0
+            ? Math.round((concluidos / totalVinculados) * 100)
+            : 0,
       };
     });
 
@@ -215,6 +275,8 @@ export default function DashboardMetrics() {
       totalTotems,
       allTimePdvs,
       allTimeTotems,
+      allTimeConcluidos,
+      allTimeLojasAtivas,
       triagem,
       preenchido,
       implantacao,
@@ -222,7 +284,7 @@ export default function DashboardMetrics() {
       taxaConclusao,
       cardsComFoto,
       cardsComPix,
-      operatorStats
+      operatorStats,
     };
   }, [filteredCards, cards, users, selectedStore, startDate, endDate]);
 
@@ -238,9 +300,9 @@ export default function DashboardMetrics() {
     const totalDays = lastDay.getDate();
 
     const scheduledMap = {};
-    cards.forEach(card => {
+    cards.forEach((card) => {
       if (card.scheduled_date) {
-        const [cYear, cMonth] = card.scheduled_date.split('-').map(Number);
+        const [cYear, cMonth] = card.scheduled_date.split("-").map(Number);
         if (cYear === year && cMonth === month + 1) {
           if (!scheduledMap[card.scheduled_date]) {
             scheduledMap[card.scheduled_date] = [];
@@ -256,35 +318,62 @@ export default function DashboardMetrics() {
     }
 
     for (let d = 1; d <= totalDays; d++) {
-      const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const isToday = new Date().toISOString().split('T')[0] === formattedDate;
+      const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const isToday = new Date().toISOString().split("T")[0] === formattedDate;
       days.push({
         dayNumber: d,
         dateString: formattedDate,
         isCurrentMonth: true,
         isToday,
-        items: scheduledMap[formattedDate] || []
+        items: scheduledMap[formattedDate] || [],
       });
     }
 
     return days;
   }, [calendarDate, cards]);
 
-  const currentMonthLabel = new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-  const calendarMonthLabel = calendarDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+  const currentMonthLabel = new Date().toLocaleString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+  const calendarMonthLabel = calendarDate.toLocaleString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <div className={`space-y-4 ${isFullscreen ? 'h-full flex flex-col justify-between overflow-hidden' : ''}`}>
+    <div
+      className={`space-y-4 relative ${isFullscreen ? "h-full flex flex-col justify-between overflow-hidden" : ""}`}
+    >
       {/* Header com Descrição e Botão Modo TV / Fullscreen */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black font-heading text-slate-900 dark:text-white flex items-center gap-2">
-            <BarChart3 className="text-brand-500" size={24} />
-            Métricas de Implantação SiTEF & BIP360
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-darkSurface-muted">
-            Painel consolidado de produtividade dos operadores, status e volumetria
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 relative z-10">
+        <div className="flex items-center gap-4">
+          {/* Imagens dos logos no canto superior esquerdo no Modo Apresentação / TV */}
+          {isFullscreen && (
+            <div className="flex items-center gap-3 pr-3 border-r border-slate-200 dark:border-darkSurface-border">
+              <img
+                src={logoChiquinho}
+                alt="Chiquinho Sorvetes"
+                className="h-9 md:h-10 w-auto object-contain drop-shadow-xs"
+              />
+              <img
+                src={logoBip360}
+                alt="BIP360 Sistemas"
+                className="h-8 md:h-9 w-auto object-contain drop-shadow-xs brightness-105"
+              />
+            </div>
+          )}
+
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black font-heading text-slate-900 dark:text-white flex items-center gap-2">
+              <BarChart3 className="text-brand-500" size={24} />
+              Métricas de Implantação SiTEF & BIP360
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-darkSurface-muted">
+              Painel consolidado de produtividade dos operadores, status e
+              volumetria
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -296,17 +385,21 @@ export default function DashboardMetrics() {
           <button
             onClick={toggleFullscreen}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-darkSurface-card dark:hover:bg-darkSurface-cardHover border border-slate-200 dark:border-darkSurface-border text-xs font-semibold text-slate-700 dark:text-slate-200 transition shadow-sm"
-            title={isFullscreen ? 'Sair do Modo TV (Esc)' : 'Ativar Modo TV / Tela Cheia (F11)'}
+            title={
+              isFullscreen
+                ? "Sair do Modo Apresentação (Esc)"
+                : "Ativar Modo Apresentação / Tela Cheia (F11)"
+            }
           >
             {isFullscreen ? (
               <>
                 <Minimize2 size={14} />
-                <span>Sair Modo TV</span>
+                <span>Sair Modo Apresentação</span>
               </>
             ) : (
               <>
-                <Tv size={14} className="text-purple-500" />
-                <span>Modo TV (F11)</span>
+                <MonitorActivity size={14} className="text-purple-500" />
+                <span>Modo Apresentação</span>
               </>
             )}
           </button>
@@ -332,12 +425,18 @@ export default function DashboardMetrics() {
       )}
 
       {/* Cards de Métricas Gerais do Período */}
-      <div className={`shrink-0 transition-opacity duration-200 ${isFiltering ? 'opacity-60' : 'opacity-100'}`}>
+      <div
+        className={`shrink-0 transition-opacity duration-200 relative z-10 ${isFiltering ? "opacity-60" : "opacity-100"}`}
+      >
         <MetricsSummaryCards metrics={metrics} isFullscreen={isFullscreen} />
       </div>
 
       {/* Calendário de Implantações Previstas */}
-      <div className={isFullscreen ? 'flex-1 min-h-0' : ''}>
+      <div
+        className={
+          isFullscreen ? "flex-1 min-h-0 relative z-10" : "relative z-10"
+        }
+      >
         <CalendarWidget
           calendarGrid={calendarGrid}
           calendarMonthLabel={calendarMonthLabel}
@@ -357,7 +456,9 @@ export default function DashboardMetrics() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-5 rounded-2xl bg-white dark:bg-darkSurface-card border border-slate-200 dark:border-darkSurface-border shadow-sm flex items-center justify-between">
               <div>
-                <span className="text-xs uppercase font-bold text-slate-400">Qualidade Cadastral</span>
+                <span className="text-xs uppercase font-bold text-slate-400">
+                  Qualidade Cadastral
+                </span>
                 <div className="text-xl font-bold font-heading text-slate-900 dark:text-white mt-1">
                   {metrics.cardsComFoto} lojas com foto registrada
                 </div>
@@ -372,7 +473,9 @@ export default function DashboardMetrics() {
 
             <div className="p-5 rounded-2xl bg-white dark:bg-darkSurface-card border border-slate-200 dark:border-darkSurface-border shadow-sm flex items-center justify-between">
               <div>
-                <span className="text-xs uppercase font-bold text-slate-400">Adesão ao Pix TEF</span>
+                <span className="text-xs uppercase font-bold text-slate-400">
+                  Adesão ao Pix TEF
+                </span>
                 <div className="text-xl font-bold font-heading text-slate-900 dark:text-white mt-1">
                   {metrics.cardsComPix} lojas operando com Pix
                 </div>

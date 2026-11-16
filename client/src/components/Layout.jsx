@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logoBip360 from '../assets/images/logo-bip360.png';
@@ -10,8 +10,10 @@ import {
   Kanban,
   BarChart3,
   ShieldAlert,
-  UserCheck
+  UserCheck,
+  KeyRound
 } from 'lucide-react';
+import ChangePasswordModal from './common/ChangePasswordModal';
 
 export default function Layout({ children }) {
   const { user, logout, darkMode, toggleDarkMode } = useAuth();
@@ -19,6 +21,7 @@ export default function Layout({ children }) {
   const location = useLocation();
 
   const [isFullscreen, setIsFullscreen] = React.useState(!!document.fullscreenElement);
+  const [showPasswordModal, setShowPasswordModal] = React.useState(false);
 
   React.useEffect(() => {
     const handleFullscreenChange = () => {
@@ -117,6 +120,15 @@ export default function Layout({ children }) {
                 </div>
               </div>
 
+              {/* Botão para o próprio usuário alterar sua senha */}
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="p-2 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-darkSurface-cardHover rounded-lg transition"
+                title="Alterar minha senha"
+              >
+                <KeyRound size={17} />
+              </button>
+
               <button
                 onClick={handleLogout}
                 className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
@@ -133,6 +145,14 @@ export default function Layout({ children }) {
       <main className={`flex-1 w-full ${isFullscreen ? 'max-w-none p-3 sm:p-5 flex flex-col h-screen overflow-hidden' : location.pathname === '/kanban' ? 'max-w-[1700px] p-3 sm:p-4 flex flex-col min-h-0 overflow-hidden' : 'max-w-7xl p-4 sm:p-6 lg:p-8'} mx-auto`}>
         {children}
       </main>
+
+      {/* Modal de Alteração de Senha do Usuário Logado */}
+      <ChangePasswordModal
+        isOpen={showPasswordModal}
+        targetUser={user}
+        currentUser={user}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </div>
   );
 }

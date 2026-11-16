@@ -38,19 +38,20 @@ export function generateMarkdown(card) {
 ---
 
 ### 2. DADOS DO ADQUIRENTE (SiTEF)
-* **#10. Número Lógico da Adquirente:** ${f.numero_logico_adquirente || 'Não informado'}
-* **#11. Quantidade de PDVs com TEF (terminais):** ${f.qtd_pdvs_tef || '0'}
-* **#12. Quantidade de TOTEMs com TEF (terminais):** ${f.qtd_totems_tef || '0'}
-* **#13. Foto da Maquininha:** ${f.foto_maquininha_ok ? 'Confirmada (OK)' : 'Pendente'}
+* **#10. Adquirente / Empresa TEF:** ${f.adquirente_banco || 'Não informado'}
+* **#11. Número Lógico da Adquirente:** ${f.numero_logico_adquirente || 'Não informado'}
+* **#12. Quantidade de PDVs com TEF (terminais):** ${f.qtd_pdvs_tef || '0'}
+* **#13. Quantidade de TOTEMs com TEF (terminais):** ${f.qtd_totems_tef || '0'}
+* **#14. Foto da Maquininha:** ${f.foto_maquininha_ok ? 'Confirmada (OK)' : 'Pendente'}
 * **URL/Arquivo da Imagem:** ${f.photo_url || 'Nenhuma imagem anexada'}
 
 ---
 
 ### 3. CREDENCIAMENTO PIX
 ${f.pix_nao_se_aplica ? `* **Status Pix:** NÃO SE APLICA (N/A) - Loja não opera com Pix no TEF.` : `
-* **#14. Identificação do PSP (Banco):** ${f.pix_psp_banco || 'Não informado'}
-* **#15. Vinculação com integração FISERV no Banco:** ${f.pix_vinculacao_fiserv_ok ? 'Realizada no Banco (OK)' : 'Pendente'}
-* **#16. Chave Pix que será utilizada na operação:** \`${f.pix_chave || 'Não informada'}\`
+* **#15. Identificação do PSP (Banco):** ${f.pix_psp_banco || 'Não informado'}
+* **#16. Vinculação com integração FISERV no Banco:** ${f.pix_vinculacao_fiserv_ok ? 'Realizada no Banco (OK)' : 'Pendente'}
+* **#17. Chave Pix que será utilizada na operação:** \`${f.pix_chave || 'Não informada'}\`
 `}
 
 ---
