@@ -15604,6 +15604,31 @@
       "qtd_totems_tef": "0",
       "foto_maquininha_ok": false,
       "created_at": "2026-11-01T08:00:00.000Z"
+    },
+    {
+      "id": "form-data-1794919130326",
+      "card_id": "card-frn-1100",
+      "cnpj": "30.005.398/0001-10",
+      "razao_social": "LUDPAM 9 SORVETERIA LTDA",
+      "responsavel": "Mário Sergio da Silva",
+      "telefone": "(94) 991189707",
+      "email_unidade": "abaetetuba@chiquinho.com.br",
+      "endereco": "RUA LAURO SODRE, 1536, Centro",
+      "cep": "68440000",
+      "cidade": "ABAETETUBA",
+      "uf": "PA",
+      "adquirente_banco": "Bin",
+      "adquirente_outro_nome": "",
+      "numero_logico_adquirente": "1234567899",
+      "qtd_pdvs_tef": "1",
+      "qtd_totems_tef": "0",
+      "foto_maquininha_ok": true,
+      "photo_url": "https://storage.mock-bip360.local/uploads/1794919106158-modelo1 (2).png",
+      "pix_psp_banco": "",
+      "pix_vinculacao_fiserv_ok": false,
+      "pix_chave": "",
+      "pix_nao_se_aplica": true,
+      "created_at": "2026-11-17T12:38:50.326Z"
     }
   ],
   "acquirers": [

@@ -108,9 +108,9 @@ export async function downloadPhotoSeparately(card) {
     const res = await fetch(photoUrl);
     if (!res.ok) throw new Error('Não foi possível obter a imagem');
     const blob = await res.blob();
-    const ext = photoUrl.split('.').pop().split(/\#|\?/)[0] || 'jpg';
+    const ext = photoUrl.split('.').pop().split(/[#?]/)[0] || 'jpg';
     triggerNativeDownload(blob, `${sanitizedTitle}_maquininha.${ext}`);
-  } catch (err) {
+  } catch {
     // Se for URL externa de mock ou falhar CORS, abre em nova aba para salvar diretamente
     window.open(photoUrl, '_blank');
   }
