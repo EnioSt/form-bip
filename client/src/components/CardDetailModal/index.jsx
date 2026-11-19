@@ -4,6 +4,7 @@ import { FormDataSummary } from "../FormDataSummary";
 import { EmptyFormData } from "../EmptyFormData";
 import { CardNotes } from "../CardNotes";
 import { CardDetailFooter } from "../CardDetailFooter";
+import { InactiveStoreNotice } from "../InactiveStoreNotice";
 
 const LoadingDetails = () => (
   <div role="status" className="text-center py-12">
@@ -63,6 +64,7 @@ export const CardDetailModal = ({
       />
 
       <div className="p-6 overflow-y-auto space-y-6 text-sm">
+        <InactiveStoreNotice card={selectedCard} />
         {renderFormData()}
 
         <CardNotes

@@ -1,6 +1,8 @@
 import { Building2 } from 'lucide-react';
 import { FormSection } from '../FormSection';
 import { FormInput } from '../FormInput';
+import { FormSelect } from '../FormSelect';
+import { BRAZILIAN_STATES } from '../../utils/brazilianStates';
 
 /**
  * Seção 1: Dados da Loja (campos 1–9).
@@ -69,13 +71,12 @@ export const StoreDataSection = ({ register, errors = {}, status = {} }) => {
             placeholder="São José do Rio Preto"
             hint="Exemplo: São José do Rio Preto"
           />
-          <FormInput
+          <FormSelect
             {...field('uf', 9)}
             label="#9. UF *"
-            maxLength={2}
-            placeholder="SP"
-            hint="Exemplo: SP"
-            className="uppercase"
+            options={BRAZILIAN_STATES}
+            placeholder="Selecione o estado"
+            hint="Selecione o estado da loja"
           />
         </div>
       </div>

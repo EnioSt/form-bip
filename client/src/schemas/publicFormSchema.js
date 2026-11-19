@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { STATE_CODES } from "../utils/brazilianStates";
 
 const onlyDigits = (value) => value.replace(/\D/g, "");
 
@@ -29,7 +30,7 @@ export const publicFormSchema = z
     endereco: requiredText("Informe o endereço"),
     cep: requiredDigits("Informe o CEP", [8], "O CEP deve ter 8 dígitos"),
     cidade: requiredText("Informe a cidade"),
-    uf: requiredText("Informe a UF").refine((v) => /^[A-Za-z]{2}$/.test(v.trim()), "A UF deve ter 2 letras"),
+    uf: requiredText("Selecione o estado").refine((v) => STATE_CODES.includes(v), "Selecione um estado da lista"),
 
     // 2. Dados do Adquirente
     adquirente_banco: requiredText("Selecione a adquirente"),

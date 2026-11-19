@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { api } from "../services/api";
+import { useAutoRefresh } from "./useAutoRefresh";
 import { useMetricsFilters } from "./useMetricsFilters";
 import { useCalendarMonth } from "./useCalendarMonth";
 import {
@@ -28,20 +29,28 @@ export const useDashboardMetrics = ({ isFullscreen }) => {
   const filters = useMetricsFilters(getMonthRange(today));
   const calendar = useCalendarMonth(today);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [cardsRes, usersRes] = await Promise.all([api.getCards(), api.getUsers()]);
-        setCards(cardsRes);
-        setUsers(usersRes);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
+  const loadData = useCallback(async () => {
+    try {
+      const [cardsRes, usersRes] = await Promise.all([api.getCards(), api.getUsers()]);
+      setCards(cardsRes);
+      setUsers(usersRes);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Carga inicial: o carregador async é definido dentro do efeito (padrão recomendado)
+  useEffect(() => {
+    const loadInitialData = async () => {
+      await loadData();
+    };
+    loadInitialData();
+  }, [loadData]);
+
+  // Mantém métricas e calendário atualizados (útil principalmente no Modo TV)
+  useAutoRefresh(loadData);
 
   const { store, operator, startDate, endDate } = filters;
 

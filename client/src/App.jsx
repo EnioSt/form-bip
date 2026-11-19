@@ -13,6 +13,7 @@ const Dashboard = lazyPage(() => import('./pages/Dashboard'), 'Dashboard');
 const DashboardMetrics = lazyPage(() => import('./pages/DashboardMetrics'), 'DashboardMetrics');
 const UsersAdmin = lazyPage(() => import('./pages/UsersAdmin'), 'UsersAdmin');
 const PublicForm = lazyPage(() => import('./pages/PublicForm'), 'PublicForm');
+const NotFound = lazyPage(() => import('./pages/NotFound'), 'NotFound');
 
 // Rota protegida para usuários autenticados
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -62,8 +63,11 @@ export const App = () => {
               }
             />
 
-            {/* Redirecionamento padrão */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* Raiz leva ao painel (ou ao login, via ProtectedRoute) */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* Qualquer outro endereço */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

@@ -19,9 +19,12 @@ export const useKanbanFilters = (cards, getOperatorName) => {
         }
       }
 
-      // 2. Filtro por termo de pesquisa (Unidade / Razão Social / Cidade)
+      // 2. Filtro por termo de pesquisa (Unidade / Código / Razão Social / Cidade)
       if (searchTerm.trim()) {
         const normalizedSearch = normalizeText(searchTerm);
+        const matchCode =
+          card.external_id != null &&
+          String(card.external_id) === normalizedSearch.replace(/^#/, "");
         const matchTitle = normalizeText(card.title).includes(normalizedSearch);
         const matchRazao =
           card.formData?.razao_social &&
@@ -29,7 +32,7 @@ export const useKanbanFilters = (cards, getOperatorName) => {
         const matchCidade =
           card.formData?.cidade &&
           normalizeText(card.formData.cidade).includes(normalizedSearch);
-        if (!matchTitle && !matchRazao && !matchCidade) return false;
+        if (!matchTitle && !matchCode && !matchRazao && !matchCidade) return false;
       }
 
       return true;

@@ -61,7 +61,8 @@ export const KanbanToolbar = ({
           <span>Adicionar Adquirente</span>
         </button>
 
-        {isAdmin && (
+        {/* Só aparece se a página fornecer onAddCard (hoje desativado: cards vêm da API de franquias) */}
+        {isAdmin && onAddCard && (
           <button
             type="button"
             onClick={onAddCard}

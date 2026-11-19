@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../services/api";
+import { useAutoRefresh } from "./useAutoRefresh";
 
 const getToday = () => new Date().toISOString().split("T")[0];
 
@@ -62,6 +63,9 @@ export const useKanbanBoard = ({ user, openConfirm, closeConfirm }) => {
     };
     loadInitialBoard();
   }, [loadBoard]);
+
+  // Sincroniza periodicamente (ex.: franqueado enviou o formulário → card vai para "Preenchido")
+  useAutoRefresh(loadBoard);
 
   const getOperatorName = (operatorId) => users.find((u) => u.id === operatorId)?.name ?? null;
 
@@ -142,8 +146,13 @@ export const useKanbanBoard = ({ user, openConfirm, closeConfirm }) => {
   const toggleActive = async (cardId) => {
     try {
       const updated = await api.toggleCardActive(cardId);
-      setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, is_active: updated.is_active } : c)));
-      patchSelectedCard(cardId, { is_active: updated.is_active });
+      const patch = {
+        is_active: updated.is_active,
+        inactive_reason: updated.inactive_reason ?? null,
+        inactivated_at: updated.inactivated_at ?? null,
+      };
+      setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, ...patch } : c)));
+      patchSelectedCard(cardId, patch);
     } catch (err) {
       alert(err.message || "Erro ao alterar status da loja");
     }
@@ -198,7 +207,7 @@ export const useKanbanBoard = ({ user, openConfirm, closeConfirm }) => {
 
     setSavingNote(true);
     try {
-      const res = await api.addCardNote(selectedCard.id, newNoteText.trim(), user?.id, user?.name || "Operador");
+      const res = await api.addCardNote(selectedCard.id, newNoteText.trim());
       setNewNoteText("");
       patchSelectedCard(selectedCard.id, { notes: res.card.notes });
       loadBoard();
@@ -217,7 +226,7 @@ export const useKanbanBoard = ({ user, openConfirm, closeConfirm }) => {
       variant: "danger",
       onConfirm: async () => {
         try {
-          const res = await api.deleteCardNote(selectedCard.id, noteId, user?.id, user?.role);
+          const res = await api.deleteCardNote(selectedCard.id, noteId);
           patchSelectedCard(selectedCard.id, { notes: res.card.notes });
           loadBoard();
         } catch (err) {

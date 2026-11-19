@@ -61,7 +61,7 @@ export const DashboardMetrics = () => {
         <>
           <OperatorStatsTable operatorStats={metrics.operatorStats} />
 
-          <section aria-label="Indicadores de qualidade técnica" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <section aria-label="Indicadores de qualidade técnica" className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <QualityIndicatorCard
               label="Qualidade Cadastral"
               value={`${metrics.cardsComFoto} lojas com foto registrada`}
@@ -75,6 +75,13 @@ export const DashboardMetrics = () => {
               description="Chave Pix e homologação bancária FISERV cadastradas"
               icon="⚡"
               iconClassName="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+            />
+            <QualityIndicatorCard
+              label="Lojas Inativas"
+              value={`${metrics.inativas} fora dos relatórios`}
+              description="Inativadas pela franqueadora ou manualmente; PDVs e TOTEMs não são contabilizados"
+              icon="⛔"
+              iconClassName="bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
             />
           </section>
         </>

@@ -3,6 +3,7 @@ import { CheckCircle2, MessageSquare } from 'lucide-react';
 import { OperatorTag } from '../OperatorTag';
 import { CardSchedule } from '../CardSchedule';
 import { CardActions } from '../CardActions';
+import { getInactiveInfo } from '../../utils/storeStatus';
 
 const parseOperatorId = (value) => {
   if (!value) return null;
@@ -44,16 +45,24 @@ const getQuickData = (formData) => ({
   totems: formData.qtd_totems_tef || formData.totem_count || 0,
 });
 
-const QuickFormData = ({ formData }) => {
+const QuickFormData = ({ formData, isInactive }) => {
   const { responsavel, telefone, pdvs, totems } = getQuickData(formData);
+  const terminalsLabel = `${pdvs} ${Number(pdvs) === 1 ? "PDV" : "PDVs"} • ${totems} ${Number(totems) === 1 ? "Totem" : "Totens"}`;
 
   return (
     <section className="bg-slate-50 dark:bg-darkSurface-bg/70 rounded-lg p-2 mb-2.5 text-xs text-slate-600 dark:text-slate-300 space-y-0.5 border border-slate-100 dark:border-darkSurface-border">
       <p className="truncate"><span className="font-medium text-slate-500">Resp:</span> {responsavel}</p>
       <p className="truncate"><span className="font-medium text-slate-500">Tel:</span> {telefone}</p>
-      <p className="truncate font-semibold text-brand-600 dark:text-brand-400">
-        {pdvs} {Number(pdvs) === 1 ? "PDV" : "PDVs"} • {totems} {Number(totems) === 1 ? "Totem" : "Totens"}
-      </p>
+      {isInactive ? (
+        <p className="truncate font-semibold text-slate-400 dark:text-slate-500" title="Loja inativa: não contabilizado nos relatórios">
+          <s className="decoration-rose-500">{terminalsLabel}</s>
+          <span className="ml-1 text-[10px] font-medium no-underline">(fora dos relatórios)</span>
+        </p>
+      ) : (
+        <p className="truncate font-semibold text-brand-600 dark:text-brand-400">
+          {terminalsLabel}
+        </p>
+      )}
     </section>
   );
 };
@@ -84,7 +93,8 @@ export const Card = ({
 
   const hasData = !!card.formData;
   const isAdmin = user?.role === 'admin';
-  const isInactive = card.is_active === false;
+  const inactiveInfo = getInactiveInfo(card);
+  const { isInactive } = inactiveInfo;
   const notesCount = Array.isArray(card.notes) ? card.notes.length : 0;
   const activeUsers = users.filter(u => u.is_active !== false);
 
@@ -118,9 +128,17 @@ export const Card = ({
           }`}>
             {card.title}
           </h4>
+          {card.external_id != null && (
+            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500" title="Código da franquia no ITF Gestor">
+              #{card.external_id}
+            </span>
+          )}
           {isInactive && (
-            <span className="inline-block mt-0.5 text-[10px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.2 rounded border border-rose-200/60 dark:border-rose-900/40 uppercase tracking-wider">
-              Loja Inativa
+            <span
+              className="inline-block mt-0.5 text-[10px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.2 rounded border border-rose-200/60 dark:border-rose-900/40 uppercase tracking-wider"
+              title={inactiveInfo.since ? `Inativa desde ${inactiveInfo.since}` : undefined}
+            >
+              {inactiveInfo.badgeLabel}
             </span>
           )}
         </div>
@@ -152,7 +170,7 @@ export const Card = ({
         onSchedule={() => onStartImplantation(card)}
       />
 
-      {hasData && <QuickFormData formData={card.formData} />}
+      {hasData && <QuickFormData formData={card.formData} isInactive={isInactive} />}
 
       <CardActions
         card={card}

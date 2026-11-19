@@ -34,7 +34,7 @@ export const PhotoUpload = ({ register, status, uploading, previewPhoto, onUploa
           <span className="text-xs font-semibold text-brand-600 dark:text-brand-400 block">
             {uploading ? 'Enviando imagem...' : 'Fazer upload da foto da maquininha'}
           </span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">PNG, JPG até 5MB</span>
+          <span className="text-[10px] text-slate-400 block mt-0.5">JPG, PNG ou WEBP (reduzida automaticamente)</span>
           <input
             id="foto_maquininha_file"
             type="file"

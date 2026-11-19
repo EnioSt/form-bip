@@ -37,7 +37,8 @@ export const mapFormDataToValues = (formData, knownAcquirers) => {
     endereco: formData.endereco || "",
     cep: formData.cep || "",
     cidade: formData.cidade || "",
-    uf: formData.uf || "",
+    // Normaliza UFs antigas digitadas à mão (ex.: "sp ") para casar com a lista
+    uf: (formData.uf || "").trim().toUpperCase(),
     adquirente_banco: isCustom ? OTHER : rawAdquirente,
     adquirente_outro_nome: isCustom ? rawAdquirente : formData.adquirente_outro_nome || "",
     numero_logico_adquirente: formData.numero_logico_adquirente || "",
@@ -110,11 +111,13 @@ export const computeFormProgress = (values) => {
   };
 };
 
-const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+// Antes da compressão aceitamos fotos grandes de celular; depois dela, o limite é o do servidor
+const MAX_ORIGINAL_PHOTO_SIZE = 20 * 1024 * 1024;
+export const MAX_UPLOAD_PHOTO_SIZE = 2 * 1024 * 1024;
 
-/** Valida o arquivo de foto. Retorna a mensagem de erro ou null. */
+/** Valida a foto escolhida (antes da compressão). Retorna a mensagem de erro ou null. */
 export const validatePhotoFile = (file) => {
-  if (!file.type.startsWith("image/")) return "Selecione apenas arquivos de imagem (.png, .jpg, .jpeg)";
-  if (file.size > MAX_PHOTO_SIZE) return "A imagem deve ter no máximo 5MB";
+  if (!file.type.startsWith("image/")) return "Selecione apenas arquivos de imagem (.png, .jpg, .jpeg, .webp)";
+  if (file.size > MAX_ORIGINAL_PHOTO_SIZE) return "A imagem deve ter no máximo 20MB";
   return null;
 };

@@ -1,248 +1,132 @@
+import { getToken, notifySessionExpired } from "./session";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
+/**
+ * Requisição padrão à API.
+ * - Envia o token JWT quando houver sessão
+ * - 401 em rota privada → avisa o AuthProvider para deslogar
+ * - Erros viram Error com a mensagem do servidor (ou a mensagem padrão informada)
+ */
+const request = async (path, { method = "GET", body, formData, fallbackError = "Falha na comunicação com o servidor" } = {}) => {
+  const headers = {};
+  const token = getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+
+  let res;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers,
+      body: formData ?? (body !== undefined ? JSON.stringify(body) : undefined),
+      cache: "no-store",
+    });
+  } catch {
+    throw new Error("Não foi possível conectar ao servidor. Verifique sua conexão.");
+  }
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    if (res.status === 401 && token && !path.startsWith("/auth/login")) notifySessionExpired();
+    throw new Error(data.error || fallbackError);
+  }
+  return data;
+};
+
+/**
+ * Cache da lista de cards: a atualização automática pergunta primeiro a "versão" (resposta minúscula)
+ * e só baixa a lista inteira quando algo mudou. Economiza tráfego no Supabase gratuito.
+ * A cada 30 min a lista é baixada mesmo assim, para renovar os links temporários das fotos.
+ */
+const CARDS_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
+let cardsCache = null; // { version, cards, at }
+
+const getCardsCached = async () => {
+  const { version } = await request("/cards/version", { fallbackError: "Falha ao buscar cards" });
+  const isFresh = cardsCache && Date.now() - cardsCache.at < CARDS_CACHE_MAX_AGE_MS;
+  if (isFresh && cardsCache.version === version) return cardsCache.cards;
+
+  const cards = await request("/cards", { fallbackError: "Falha ao buscar cards" });
+  cardsCache = { version, cards, at: Date.now() };
+  return cards;
+};
 
 export const api = {
   // Auth
-  login: async (email, password) => {
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao autenticar");
-    }
-    return res.json();
-  },
+  login: (email, password) =>
+    request("/auth/login", { method: "POST", body: { email, password }, fallbackError: "Falha ao autenticar" }),
+
+  getMe: () => request("/auth/me", { fallbackError: "Sessão inválida" }),
 
   // Users
-  getUsers: async () => {
-    const res = await fetch(`${API_URL}/users`);
-    if (!res.ok) throw new Error("Falha ao listar usuários");
-    return res.json();
-  },
+  getUsers: () => request("/users", { fallbackError: "Falha ao listar usuários" }),
 
-  createUser: async (userData) => {
-    const res = await fetch(`${API_URL}/users`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao criar usuário");
-    }
-    return res.json();
-  },
+  createUser: (userData) =>
+    request("/users", { method: "POST", body: userData, fallbackError: "Falha ao criar usuário" }),
 
-  updateUserRole: async (id, role) => {
-    const res = await fetch(`${API_URL}/users/${id}/role`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao atualizar função do usuário");
-    }
-    return res.json();
-  },
+  updateUserRole: (id, role) =>
+    request(`/users/${id}/role`, { method: "PUT", body: { role }, fallbackError: "Falha ao atualizar função do usuário" }),
 
-  toggleUserActive: async (id) => {
-    const res = await fetch(`${API_URL}/users/${id}/toggle-active`, {
-      method: "PUT",
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao alterar status do usuário");
-    }
-    return res.json();
-  },
+  toggleUserActive: (id) =>
+    request(`/users/${id}/toggle-active`, { method: "PUT", fallbackError: "Falha ao alterar status do usuário" }),
 
-  updateUserPassword: async (id, passwordData) => {
-    const res = await fetch(`${API_URL}/users/${id}/password`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(passwordData),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao alterar senha");
-    }
-    return res.json();
-  },
+  /** passwordData: { newPassword, currentPassword? } (o servidor identifica quem pede pelo token) */
+  updateUserPassword: (id, passwordData) =>
+    request(`/users/${id}/password`, { method: "PUT", body: passwordData, fallbackError: "Falha ao alterar senha" }),
 
-  deleteUser: async (id) => {
-    const res = await fetch(`${API_URL}/users/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao excluir usuário");
-    }
-    return res.json();
-  },
+  deleteUser: (id) => request(`/users/${id}`, { method: "DELETE", fallbackError: "Falha ao excluir usuário" }),
 
   // Cards
-  getCards: async () => {
-    const res = await fetch(`${API_URL}/cards?_t=${Date.now()}`);
-    if (!res.ok) throw new Error("Falha ao buscar cards");
-    return res.json();
-  },
+  getCards: getCardsCached,
 
-  getCardDetails: async (id) => {
-    const res = await fetch(`${API_URL}/cards/${id}?_t=${Date.now()}`);
-    if (!res.ok) throw new Error("Falha ao buscar detalhes do card");
-    return res.json();
-  },
+  getCardDetails: (id) => request(`/cards/${id}`, { fallbackError: "Falha ao buscar detalhes do card" }),
 
-  createCard: async (title) => {
-    const res = await fetch(`${API_URL}/cards`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao criar card");
-    }
-    return res.json();
-  },
+  createCard: (title) => request("/cards", { method: "POST", body: { title }, fallbackError: "Falha ao criar card" }),
 
-  updateCardStatus: async (id, status, scheduled_date) => {
-    const res = await fetch(`${API_URL}/cards/${id}/status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, scheduled_date }),
-    });
-    if (!res.ok) throw new Error("Falha ao atualizar status");
-    return res.json();
-  },
+  updateCardStatus: (id, status, scheduled_date) =>
+    request(`/cards/${id}/status`, { method: "PUT", body: { status, scheduled_date }, fallbackError: "Falha ao atualizar status" }),
 
-  assumeCard: async (id, operator_id) => {
-    const res = await fetch(`${API_URL}/cards/${id}/assume`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ operator_id }),
-    });
-    if (!res.ok) throw new Error("Falha ao assumir card");
-    return res.json();
-  },
+  assumeCard: (id, operator_id) =>
+    request(`/cards/${id}/assume`, { method: "PUT", body: { operator_id }, fallbackError: "Falha ao assumir card" }),
 
-  updateCardSchedule: async (id, scheduled_date) => {
-    const res = await fetch(`${API_URL}/cards/${id}/schedule`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ scheduled_date }),
-    });
-    if (!res.ok) throw new Error("Falha ao atualizar data prevista");
-    return res.json();
-  },
+  updateCardSchedule: (id, scheduled_date) =>
+    request(`/cards/${id}/schedule`, { method: "PUT", body: { scheduled_date }, fallbackError: "Falha ao atualizar data prevista" }),
 
-  reopenCard: async (id) => {
-    const res = await fetch(`${API_URL}/cards/${id}/reopen`, {
-      method: "PUT",
-    });
-    if (!res.ok) throw new Error("Falha ao reabrir formulário");
-    return res.json();
-  },
+  reopenCard: (id) => request(`/cards/${id}/reopen`, { method: "PUT", fallbackError: "Falha ao reabrir formulário" }),
 
-  toggleCardActive: async (id) => {
-    const res = await fetch(`${API_URL}/cards/${id}/toggle-active`, {
-      method: "PUT",
-    });
-    if (!res.ok) throw new Error("Falha ao alternar status da loja");
-    return res.json();
-  },
+  toggleCardActive: (id) =>
+    request(`/cards/${id}/toggle-active`, { method: "PUT", fallbackError: "Falha ao alternar status da loja" }),
 
-  deleteCard: async (id) => {
-    const res = await fetch(`${API_URL}/cards/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao excluir card");
-    }
-    return res.json();
-  },
+  deleteCard: (id) => request(`/cards/${id}`, { method: "DELETE", fallbackError: "Falha ao excluir card" }),
 
-  addCardNote: async (cardId, text, author_id, author_name) => {
-    const res = await fetch(`${API_URL}/cards/${cardId}/notes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, author_id, author_name }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao salvar observação");
-    }
-    return res.json();
-  },
+  /** O autor da observação é o usuário logado (definido pelo servidor). */
+  addCardNote: (cardId, text) =>
+    request(`/cards/${cardId}/notes`, { method: "POST", body: { text }, fallbackError: "Falha ao salvar observação" }),
 
-  deleteCardNote: async (cardId, noteId, user_id, user_role) => {
-    const res = await fetch(`${API_URL}/cards/${cardId}/notes/${noteId}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id, user_role }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao excluir observação");
-    }
-    return res.json();
-  },
+  deleteCardNote: (cardId, noteId) =>
+    request(`/cards/${cardId}/notes/${noteId}`, { method: "DELETE", fallbackError: "Falha ao excluir observação" }),
 
-  // Form Público
-  getFormByToken: async (token) => {
-    const res = await fetch(`${API_URL}/form/${token}`);
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Link inválido");
-    }
-    return res.json();
-  },
+  // Formulário público (sem login: acesso pelo token do link)
+  getFormByToken: (token) => request(`/form/${encodeURIComponent(token)}`, { fallbackError: "Link inválido" }),
 
-  submitForm: async (token, formData) => {
-    const res = await fetch(`${API_URL}/form/${token}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao enviar formulário");
-    }
-    return res.json();
-  },
+  submitForm: (token, formData) =>
+    request(`/form/${encodeURIComponent(token)}`, { method: "POST", body: formData, fallbackError: "Falha ao enviar formulário" }),
 
-  uploadPhoto: async (file) => {
+  uploadFormPhoto: (token, file) => {
     const data = new FormData();
     data.append("photo", file);
-    const res = await fetch(`${API_URL}/upload`, {
+    return request(`/form/${encodeURIComponent(token)}/photo`, {
       method: "POST",
-      body: data,
+      formData: data,
+      fallbackError: "Erro ao fazer upload da imagem",
     });
-    if (!res.ok) throw new Error("Erro ao fazer upload da imagem");
-    return res.json();
   },
 
   // Adquirentes
-  getAcquirers: async () => {
-    const res = await fetch(`${API_URL}/acquirers`);
-    if (!res.ok) throw new Error("Falha ao buscar adquirentes");
-    return res.json();
-  },
+  getAcquirers: () => request("/acquirers", { fallbackError: "Falha ao buscar adquirentes" }),
 
-  addAcquirer: async (name) => {
-    const res = await fetch(`${API_URL}/acquirers`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Falha ao adicionar adquirente");
-    }
-    return res.json();
-  },
+  addAcquirer: (name) =>
+    request("/acquirers", { method: "POST", body: { name }, fallbackError: "Falha ao adicionar adquirente" }),
 };

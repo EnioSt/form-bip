@@ -49,9 +49,10 @@ export const UserForm = ({ values, feedback, onChange, onSubmit }) => {
           type="password"
           required
           autoComplete="new-password"
+          minLength={8}
           value={values.password}
           onChange={(v) => onChange("password", v)}
-          placeholder="••••••••"
+          placeholder="Mínimo 8 caracteres"
         />
 
         <div>

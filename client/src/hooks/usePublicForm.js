@@ -9,7 +9,9 @@ import {
   buildSubmitPayload,
   computeFormProgress,
   validatePhotoFile,
+  MAX_UPLOAD_PHOTO_SIZE,
 } from "../utils/publicForm";
+import { compressImage } from "../utils/imageCompression";
 
 /**
  * Estado completo do formulário público (react-hook-form + zod):
@@ -89,14 +91,21 @@ export const usePublicForm = (token) => {
 
     setUploading(true);
     try {
-      const res = await api.uploadPhoto(file);
+      const compressed = await compressImage(file);
+      if (compressed.size > MAX_UPLOAD_PHOTO_SIZE) {
+        alert("Não foi possível reduzir a imagem para até 2MB. Tente uma foto em JPG ou PNG.");
+        return;
+      }
+
+      const res = await api.uploadFormPhoto(token, compressed);
       setValue("photo_url", res.photo_url);
       setValue("foto_maquininha_ok", true);
       setPreviewPhoto(res.photo_url);
-    } catch {
-      alert("Falha ao processar upload da foto");
+    } catch (err) {
+      alert(err.message || "Falha ao processar upload da foto");
     } finally {
       setUploading(false);
+      e.target.value = ""; // permite escolher o mesmo arquivo de novo
     }
   };
 

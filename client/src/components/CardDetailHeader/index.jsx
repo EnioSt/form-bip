@@ -1,5 +1,6 @@
 import { X, Trash2 } from "lucide-react";
 import { StoreActiveToggle } from "../StoreActiveToggle";
+import { getInactiveInfo } from "../../utils/storeStatus";
 
 const formatDate = (isoDate) =>
   new Date(isoDate + "T12:00:00").toLocaleDateString("pt-BR");
@@ -67,7 +68,11 @@ export const CardDetailHeader = ({
             DADOS DO FORMULÁRIO SITEF
           </span>
           {onToggleActive && (
-            <StoreActiveToggle isActive={isActive} onToggle={() => onToggleActive(card.id)} />
+            <StoreActiveToggle
+              isActive={isActive}
+              lockedByFranchise={getInactiveInfo(card).byFranchise}
+              onToggle={() => onToggleActive(card.id)}
+            />
           )}
         </div>
 
@@ -82,7 +87,15 @@ export const CardDetailHeader = ({
           {card.title}
         </h3>
 
-        <p className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+        <p className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
+          {card.external_id != null && (
+            <>
+              <span title="Código da franquia no ITF Gestor">
+                Código: <strong className="font-mono">#{card.external_id}</strong>
+              </span>
+              <Separator />
+            </>
+          )}
           <span>
             Status:{" "}
             <strong className="uppercase text-brand-600 dark:text-brand-400">{card.status}</strong>

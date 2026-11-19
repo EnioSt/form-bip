@@ -12,7 +12,6 @@ import { KanbanMetricsBar } from "../components/KanbanMetricsBar";
 import { ActiveFilters } from "../components/ActiveFilters";
 import { KanbanBoard } from "../components/KanbanBoard";
 import { ScheduleModal } from "../components/ScheduleModal";
-import { CreateCardModal } from "../components/CreateCardModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { CardDetailModal } from "../components/CardDetailModal";
 import { AddAcquirerModal } from "../components/AddAcquirerModal";
@@ -32,7 +31,8 @@ export const Dashboard = () => {
 
   const { openConfirm, closeConfirm, dialogProps } = useConfirmDialog();
   const { copiedToken, copyFormLink } = useClipboardLink();
-  const { cards, users, getOperatorName, actions, details, schedule, creation } = useKanbanBoard({
+  // Criação manual de cards desativada: os cards vêm da API de franquias (useKanbanBoard().creation segue disponível)
+  const { cards, users, getOperatorName, actions, details, schedule } = useKanbanBoard({
     user,
     openConfirm,
     closeConfirm,
@@ -52,7 +52,6 @@ export const Dashboard = () => {
         users={users}
         isAdmin={isAdmin}
         onAddAcquirer={() => setShowAddAcquirerModal(true)}
-        onAddCard={creation.open}
       />
 
       <KanbanMetricsBar columns={COLUMNS} cards={cards} />
@@ -100,15 +99,6 @@ export const Dashboard = () => {
         onChangeNoteText={details.setNewNoteText}
         onAddNote={details.addNote}
         onDeleteNote={details.deleteNote}
-      />
-
-      <CreateCardModal
-        isOpen={creation.isOpen}
-        title={creation.title}
-        cards={cards}
-        onChangeTitle={creation.setTitle}
-        onClose={creation.close}
-        onSubmit={creation.submit}
       />
 
       <ScheduleModal

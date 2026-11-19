@@ -32,6 +32,12 @@ const toPositiveInt = (value) => {
 
 const countByStatus = (cards, status) => cards.filter((c) => c.status === status).length;
 
+/** Loja ativa = não foi inativada manualmente nem pela API de franquias. */
+export const isCardActive = (card) => card.is_active !== false;
+
+/** Mantém só as lojas ativas: inativas ficam no histórico do card, fora dos relatórios. */
+export const onlyActiveCards = (cards) => cards.filter(isCardActive);
+
 /**
  * Aplica os filtros de loja, operador e período.
  * No modo TV (ignoreFilters) devolve todos os cards para a visão geral acumulada.
@@ -50,8 +56,7 @@ export const filterCards = (cards, { store, operator, startDate, endDate, ignore
 const computeAllTimeTotals = (cards) => {
   const totals = { allTimePdvs: 0, allTimeTotems: 0, allTimeConcluidos: 0, allTimeLojasAtivas: 0 };
 
-  cards.forEach((c) => {
-    if (c.is_active === false) return;
+  onlyActiveCards(cards).forEach((c) => {
     totals.allTimeLojasAtivas += 1;
     if (c.status === "concluido") totals.allTimeConcluidos += 1;
     if (c.formData) {
@@ -67,8 +72,8 @@ const computeAllTimeTotals = (cards) => {
 const computeTerminalTotals = (cards) => {
   let totalPdvs = 0;
   let totalTotems = 0;
-  cards.forEach((c) => {
-    if (c.is_active !== false && c.formData) {
+  onlyActiveCards(cards).forEach((c) => {
+    if (c.formData) {
       totalPdvs += toPositiveInt(c.formData.qtd_pdvs_tef);
       totalTotems += toPositiveInt(c.formData.qtd_totems_tef);
     }
@@ -79,7 +84,7 @@ const computeTerminalTotals = (cards) => {
 /** Desempenho por operador (respeita filtros de loja e período, nunca o de operador). */
 const computeOperatorStats = (cards, users, { store, startDate, endDate }) =>
   users.map((u) => {
-    const userCards = cards.filter(
+    const userCards = onlyActiveCards(cards).filter(
       (c) =>
         (store === "all" || c.id === store) &&
         c.operator_id === u.id &&
@@ -99,22 +104,27 @@ const computeOperatorStats = (cards, users, { store, startDate, endDate }) =>
     };
   });
 
-/** Consolida todas as métricas exibidas no painel. */
+/**
+ * Consolida todas as métricas exibidas no painel.
+ * Lojas inativas não entram em nenhuma contagem (só em `inativas`, para informação).
+ */
 export const computeMetrics = ({ filteredCards, cards, users, filters }) => {
-  const total = filteredCards.length;
-  const concluido = countByStatus(filteredCards, "concluido");
+  const activeCards = onlyActiveCards(filteredCards);
+  const total = activeCards.length;
+  const concluido = countByStatus(activeCards, "concluido");
 
   return {
     total,
-    ...computeTerminalTotals(filteredCards),
+    inativas: filteredCards.length - total,
+    ...computeTerminalTotals(activeCards),
     ...computeAllTimeTotals(cards),
-    triagem: countByStatus(filteredCards, "triagem"),
-    preenchido: countByStatus(filteredCards, "preenchido"),
-    implantacao: countByStatus(filteredCards, "implantacao"),
+    triagem: countByStatus(activeCards, "triagem"),
+    preenchido: countByStatus(activeCards, "preenchido"),
+    implantacao: countByStatus(activeCards, "implantacao"),
     concluido,
     taxaConclusao: total > 0 ? Math.round((concluido / total) * 100) : 0,
-    cardsComFoto: filteredCards.filter((c) => c.formData?.photo_url).length,
-    cardsComPix: filteredCards.filter(
+    cardsComFoto: activeCards.filter((c) => c.formData?.photo_url).length,
+    cardsComPix: activeCards.filter(
       (c) => c.formData && !c.formData.pix_nao_se_aplica && c.formData.pix_chave,
     ).length,
     operatorStats: computeOperatorStats(cards, users, filters),

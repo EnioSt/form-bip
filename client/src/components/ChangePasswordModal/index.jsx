@@ -7,6 +7,7 @@ import { FeedbackAlert } from "../FeedbackAlert";
 import { PasswordField } from "../PasswordField";
 
 const TITLE_ID = "change-password-modal-title";
+const MIN_PASSWORD_LENGTH = 8;
 
 export const ChangePasswordModal = ({
   isOpen,
@@ -23,16 +24,16 @@ export const ChangePasswordModal = ({
 
   if (!isOpen || !targetUser) return null;
 
+  // Quem altera a própria senha (inclusive admin) confirma a senha atual
   const isSelf = currentUser?.id === targetUser.id;
-  const isAdmin = currentUser?.role === "admin";
-  const requiresCurrentPassword = isSelf && !isAdmin;
+  const requiresCurrentPassword = isSelf;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedback(null);
 
-    if (newPassword.length < 4) {
-      setFeedback({ type: "error", message: "A nova senha deve ter no mínimo 4 caracteres." });
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setFeedback({ type: "error", message: `A nova senha deve ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres.` });
       return;
     }
 
@@ -46,8 +47,6 @@ export const ChangePasswordModal = ({
       await api.updateUserPassword(targetUser.id, {
         newPassword,
         currentPassword: requiresCurrentPassword ? currentPassword : undefined,
-        requesterId: currentUser?.id,
-        requesterRole: currentUser?.role,
       });
 
       setFeedback({ type: "success", message: "Senha atualizada com sucesso!" });
@@ -104,8 +103,8 @@ export const ChangePasswordModal = ({
           label="Nova Senha"
           value={newPassword}
           onChange={setNewPassword}
-          minLength={4}
-          placeholder="Mínimo 4 caracteres"
+          minLength={MIN_PASSWORD_LENGTH}
+          placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
           autoComplete="new-password"
         />
 
@@ -114,7 +113,7 @@ export const ChangePasswordModal = ({
           label="Confirmar Nova Senha"
           value={confirmPassword}
           onChange={setConfirmPassword}
-          minLength={4}
+          minLength={MIN_PASSWORD_LENGTH}
           placeholder="Digite novamente a nova senha"
           autoComplete="new-password"
         />

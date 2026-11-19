@@ -1,7 +1,7 @@
 import { LogIn, KeyRound, Mail, AlertCircle } from "lucide-react";
 import logoBip360 from "../assets/images/logo-bip360.png";
 import { useAuth } from "../hooks/useAuth";
-import { useLogin } from "../hooks/useLogin";
+import { useLogin, QUICK_LOGIN_ENABLED } from "../hooks/useLogin";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { IconInput } from "../components/IconInput";
 import { QuickLoginButtons } from "../components/QuickLoginButtons";
@@ -77,7 +77,8 @@ export const Login = () => {
           </button>
         </form>
 
-        <QuickLoginButtons onSelect={fillQuickAccount} />
+        {/* Atalhos de teste: só no ambiente de desenvolvimento, nunca no build de produção */}
+        {QUICK_LOGIN_ENABLED && <QuickLoginButtons onSelect={fillQuickAccount} />}
       </section>
     </main>
   );

@@ -1,4 +1,5 @@
 import { Clock, Layers, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { isCardActive } from '../../utils/metrics';
 
 const COLUMN_ICONS = {
   triagem: Clock,
@@ -11,7 +12,10 @@ const MetricTile = ({ column, count }) => {
   const Icon = COLUMN_ICONS[column.id];
 
   return (
-    <li className="px-4 py-2.5 rounded-xl bg-white dark:bg-darkSurface-card border border-slate-200 dark:border-darkSurface-border shadow-sm flex items-center justify-between">
+    <li
+      className="px-4 py-2.5 rounded-xl bg-white dark:bg-darkSurface-card border border-slate-200 dark:border-darkSurface-border shadow-sm flex items-center justify-between"
+      title="Contagem de lojas ativas (lojas inativas não são contabilizadas)"
+    >
       <dl>
         <dt className="text-[11px] uppercase font-semibold text-slate-400">{column.title}</dt>
         <dd className="text-xl font-black font-heading mt-0.5 text-slate-800 dark:text-white">{count}</dd>
@@ -34,7 +38,7 @@ export const KanbanMetricsBar = ({ columns, cards }) => {
         <MetricTile
           key={col.id}
           column={col}
-          count={cards.filter(c => c.status === col.id).length}
+          count={cards.filter(c => c.status === col.id && isCardActive(c)).length}
         />
       ))}
     </ul>
